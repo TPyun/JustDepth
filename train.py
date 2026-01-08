@@ -273,10 +273,8 @@ def main():
     # -----------------------------
     # Optimizer / LR Scheduler
     # -----------------------------
-    # DDP일 수도 있으니 실제 모델 본체를 안전하게 획득
     model_body = sess.net.module if hasattr(sess.net, "module") else sess.net
 
-    # weight decay는 예: 1e-3 권장 (상황 따라 3e-4 ~ 3e-3 탐색)
     optim_groups = param_groups_weight_decay(model_body, weight_decay=1e-3)
 
     opt = torch.optim.AdamW(
@@ -285,7 +283,6 @@ def main():
         betas=(0.9, 0.999),
         fused=True,         # CUDA 11.6+ / Ampere↑에서 가속
     )
-    # opt = torch.optim.AdamW(sess.net.parameters(), lr=config.base_lr, weight_decay=1e-3, fused=True)
     total_step = len(train_loader) * config.epoch_num
 
     # 추가: warmup 설정
@@ -346,7 +343,6 @@ def main():
     time_train_start = time.time()
     step_start = sess.clock.step
 
-    # 시작 epoch을 checkpoint에서 이어서
     for epoch in range(sess.clock.epoch, sess.config.epoch_num):
         net.train()
         train_loader.sampler.set_epoch(epoch)  # 에폭별 셔플
