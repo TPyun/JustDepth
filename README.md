@@ -11,6 +11,16 @@ JustDepth: Real-Time Radar-Camera Depth Estimation with Single-Scan LiDAR Superv
   <img src="assets/Results.png" alt="Results" width="900"/>
 </p>
 
+## Runtime vs Accuracy
+<p align="center">
+  <img src="assets/PerfGraph.png" alt="Latency vs MAE" width="900"/>
+</p>
+
+## Benchmark Table
+<p align="center">
+  <img src="assets/PerfTable.png" alt="Benchmark Table" width="900"/>
+</p>
+
 ## Dataset
 This project uses the **nuScenes** dataset.
 
