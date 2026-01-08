@@ -11,6 +11,21 @@ JustDepth: Real-Time Radar-Camera Depth Estimation with Single-Scan LiDAR Superv
   <img src="assets/Results.png" alt="Results" width="900"/>
 </p>
 
+## Dataset
+This project uses the **nuScenes** dataset.
+
+### Data Layout
+Place the nuScenes dataset under `data/nuscenes/`.  
+All required `.pkl` files must be placed directly under the `data/` directory.
+
+Example structure:
+```text
+JustDepth/
+  data/
+    nuscenes/
+    *.pkl
+```
+
 ## Training
 Multi-GPU training (torchrun):
 
