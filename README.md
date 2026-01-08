@@ -19,12 +19,16 @@ Place the nuScenes dataset under `data/nuscenes/`.
 All required `.pkl` files must be placed directly under the `data/` directory.
 
 Example structure:
-```text
+~~~text
 JustDepth/
   data/
     nuscenes/
     *.pkl
-```
+~~~
+
+### Downloads
+- **PKL files (data index files):** [Google Drive folder](https://drive.google.com/drive/folders/1WvbM3ydickJU4d3_7ahFWVZ8HLsYjZzo?usp=share_link)
+- **Checkpoints (ckpt):** [Google Drive folder](https://drive.google.com/drive/folders/176G2QK_zVTm5zYy4P9ZASQ2K0a4a23ny?usp=share_link)
 
 ## Training
 Multi-GPU training (torchrun):
