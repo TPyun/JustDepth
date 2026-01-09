@@ -1,6 +1,9 @@
 # JustDepth
 JustDepth: Real-Time Radar-Camera Depth Estimation with Single-Scan LiDAR Supervision
 
+## Demo Video
+[![JustDepth Demo](https://img.youtube.com/vi/EURdRO6OfS0/maxresdefault.jpg)](https://youtu.be/EURdRO6OfS0)
+
 ## Architecture
 <p align="center">
   <img src="assets/JustDepth.png" alt="JustDepth Architecture" width="900"/>
