@@ -1,0 +1,5 @@
+*_log/
+*copy*
+__pycache__/
+data/
+*.ckpt
