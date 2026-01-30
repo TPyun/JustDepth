@@ -46,11 +46,6 @@ It focuses on a strong **accuracy–latency trade-off** for autonomous driving p
 
 ---
 
-## Keywords
-radar-camera fusion, depth estimation, graph neural networks, autonomous driving, nuScenes, real-time perception, LiDAR supervision
-
----
-
 ## Dataset (nuScenes)
 
 This project uses the **nuScenes** dataset.
