@@ -118,10 +118,10 @@ python eval.py --checkpoint <PATH_TO_CKPT>
 If you find this work useful, please cite:
 
 ~~~bibtex
-@ARTICLE{11358657,
+@article{yun2026justdepth,
+  title={JustDepth: Real-Time Radar-Camera Depth Estimation With Single-Scan LiDAR Supervision},
   author={Yun, Wooyung and Kim, Dongwook and Lee, Soomok},
   journal={IEEE Robotics and Automation Letters},
-  title={JustDepth: Real-Time Radar-Camera Depth Estimation With Single-Scan LiDAR Supervision},
   year={2026},
   volume={11},
   number={3},
