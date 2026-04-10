@@ -9,7 +9,7 @@ It focuses on a strong **accuracy–latency trade-off** for autonomous driving p
 - **Dataset:** nuScenes
 - **Venue:** IEEE Robotics and Automation Letters (RA-L), **Vol. 11, No. 3, March 2026**, pp. **2770–2777**
 - **DOI:** 10.1109/LRA.2026.3655274  
-- **IEEE Xplore:** https://ieeexplore.ieee.org/abstract/document/11358657
+- **IEEE Xplore:** https://ieeexplore.ieee.org/document/11358657
 
 ---
 
