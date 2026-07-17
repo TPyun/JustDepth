@@ -46,20 +46,26 @@ It focuses on a strong **accuracy–latency trade-off** for autonomous driving p
 
 ---
 
-## Dataset (nuScenes)
+## Datasets
 
-This project uses the **nuScenes** dataset.
+This project supports **nuScenes** and **ZJU-4DRadarCam**.
 
 ### Data Layout
-Place the nuScenes dataset under `data/nuscenes/`.  
-All required `.pkl` files must be placed directly under the `data/` directory.
+Place datasets under `data/`, or edit the paths in `configs/*.txt`.
 
 Example structure:
 ~~~text
 JustDepth/
   data/
     nuscenes/samples/
-    *.pkl
+    nuscenes_radar_5sweeps_infos_train.pkl
+    nuscenes_radar_5sweeps_infos_test.pkl
+    zju/
+      train.txt
+      test.txt
+      image/
+      gt/
+      radar/
 ~~~
 
 ### Downloads
@@ -88,16 +94,44 @@ pip install -r requirements.txt
 
 ### Multi-GPU training (torchrun)
 ~~~bash
-CUDA_VISIBLE_DEVICES=<GPU_IDS> torchrun --nproc_per_node=<NUM_GPUS> train.py
+CUDA_VISIBLE_DEVICES=<GPU_IDS> torchrun --nproc_per_node=<NUM_GPUS> train.py --config configs/nuscenes_train.txt
 # Example:
-# CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 train.py
+# CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 train.py --config configs/zju_train.txt
 ~~~
 
 ### Single-GPU training
 ~~~bash
-CUDA_VISIBLE_DEVICES=<GPU_ID> python train.py
+CUDA_VISIBLE_DEVICES=<GPU_ID> python train.py --config configs/nuscenes_train.txt --local
 # Example:
-# CUDA_VISIBLE_DEVICES=0 python train.py
+# CUDA_VISIBLE_DEVICES=0 python train.py --config configs/zju_train.txt --local
+~~~
+
+---
+
+## Confidence Maps
+
+Training uses binary confidence maps for the confidence decoder target. You can
+precompute them to avoid generating maps inside the dataloader.
+
+### nuScenes
+~~~bash
+python save_confidence_map.py \
+  --dataset nuscenes \
+  --nuscenes-path data/nuscenes_radar_5sweeps_infos_train.pkl \
+  --nuscenes-root data/nuscenes/samples \
+  --output-dir confidence_map/nuscenes_train \
+  --workers 8
+~~~
+
+### ZJU-4DRadarCam
+~~~bash
+python save_confidence_map.py \
+  --dataset zju \
+  --zju-path data/zju/train.txt \
+  --zju-root data/zju \
+  --rule dot \
+  --output-dir confidence_map/zju_train \
+  --workers 8
 ~~~
 
 ---
@@ -106,9 +140,9 @@ CUDA_VISIBLE_DEVICES=<GPU_ID> python train.py
 
 Evaluate with a checkpoint:
 ~~~bash
-python eval.py --checkpoint <PATH_TO_CKPT>
+python eval.py --config configs/nuscenes_eval.txt --checkpoint <PATH_TO_CKPT>
 # Example:
-# python eval.py --checkpoint /path/to/latest.ckpt
+# python eval.py --config configs/zju_eval.txt --checkpoint train_log/models/latest.ckpt
 ~~~
 
 ---

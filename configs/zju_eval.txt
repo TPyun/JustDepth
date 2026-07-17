@@ -1,0 +1,28 @@
+# Example:
+# CUDA_VISIBLE_DEVICES=0 python eval.py --config configs/zju_eval.txt --checkpoint /path/to/latest.ckpt
+
+mode = eval
+dataset = zju
+model_name = justdepth
+checkpoint =
+log_dir = ./eval_log
+
+batch_size = 1
+num_workers = 1
+persistent_workers = true
+prefetch_factor = 2
+shuffle = false
+
+dataset_path = data/zju/test.txt
+data_root = data/zju
+
+link_lidar = false
+rid_outliers = false
+augmentation = false
+generate_confidence = false
+sort_by_timestamp = true
+
+ranges = 50,70,80
+save_visuals = false
+vis_interval = 1
+vis_max = 0

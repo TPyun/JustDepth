@@ -3,3 +3,5 @@
 __pycache__/
 data/
 *.ckpt
+*confidence_map/
+*.pyc

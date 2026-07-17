@@ -1,13 +1,7 @@
-import functools
-import time
-
-import scipy
 import numpy as np
-import torch
 
-from nuscenes.utils.data_classes import Box, LidarPointCloud, RadarPointCloud
+from nuscenes.utils.data_classes import LidarPointCloud
 from pyquaternion import Quaternion
-from matplotlib import cm
 
 
 def project_3d_to_2d(points: np.ndarray, projection_matrix: np.ndarray):

@@ -14,8 +14,17 @@ from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import dataset 
 import timm
+from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from timm.models import create_model
 import model
+from run_config import (
+    load_run_config,
+    cfg_get,
+    cfg_get_with_cli_priority,
+    cfg_get_bool,
+    cfg_get_int,
+    cfg_get_float,
+)
 
 
 from utils import (
@@ -200,9 +209,7 @@ class Session:
             self.lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
         
         if self.lr_scheduler:
-            self.lr_scheduler.last_epoch = self.clock.step
             print(f"Resuming from step {self.clock.step}, epoch {self.clock.epoch}")
-            self.lr_scheduler.step()
 
         net = self.net.module if isinstance(self.net, DDP) else self.net
         net.load_state_dict(checkpoint['network'], strict=True)
@@ -211,12 +218,100 @@ class Session:
         logger.info(f"Loaded checkpoint from {ckp_path}")
 
 
+IMAGENET_MEAN_TENSOR = torch.tensor(IMAGENET_DEFAULT_MEAN, dtype=torch.float32).view(1, 3, 1, 1)
+IMAGENET_STD_TENSOR = torch.tensor(IMAGENET_DEFAULT_STD, dtype=torch.float32).view(1, 3, 1, 1)
+
+
+def _rotate_gpu(x, angle_deg, mode, padding_mode):
+    B, C, H, W = x.shape
+    a = torch.deg2rad(angle_deg.to(x.dtype))
+    cos, sin = torch.cos(a), torch.sin(a)
+    theta = torch.zeros(B, 2, 3, device=x.device, dtype=x.dtype)
+    theta[:, 0, 0] = cos
+    theta[:, 0, 1] = sin * (H / W)
+    theta[:, 1, 0] = -sin * (W / H)
+    theta[:, 1, 1] = cos
+    grid = F.affine_grid(theta, x.shape, align_corners=False)
+    return F.grid_sample(x, grid, mode=mode, padding_mode=padding_mode, align_corners=False)
+
+
+def apply_gpu_augmentation(images, gt_confidence, aug_params):
+    if aug_params is None:
+        return images, gt_confidence
+    aug_params = aug_params.to(images.device)
+    if aug_params.ndim == 1:
+        aug_params = aug_params.view(1, -1)
+
+    hflip = aug_params[:, 0] > 0.5
+    if hflip.any():
+        images = images.clone()
+        gt_confidence = gt_confidence.clone()
+        images[hflip] = torch.flip(images[hflip], dims=(-1,))
+        gt_confidence[hflip] = torch.flip(gt_confidence[hflip], dims=(-1,))
+
+    b = aug_params[:, 1].view(-1, 1, 1, 1)
+    c = aug_params[:, 2].view(-1, 1, 1, 1)
+    s = aug_params[:, 3].view(-1, 1, 1, 1)
+    has_color = ((b - 1.0).abs() > 1e-4) | ((c - 1.0).abs() > 1e-4) | ((s - 1.0).abs() > 1e-4)
+    if has_color.any():
+        x = images * b
+        gray = x[:, 0:1] * 0.2989 + x[:, 1:2] * 0.5870 + x[:, 2:3] * 0.1140
+        mean = gray.mean(dim=(2, 3), keepdim=True)
+        x = (x - mean) * c + mean
+        gray = x[:, 0:1] * 0.2989 + x[:, 1:2] * 0.5870 + x[:, 2:3] * 0.1140
+        x = (x - gray) * s + gray
+        images = x.clamp_(0.0, 1.0)
+
+    angle = aug_params[:, 4]
+    if (angle.abs() > 1e-6).any():
+        images = _rotate_gpu(images, angle, mode='bicubic', padding_mode='reflection')
+        gt_confidence = _rotate_gpu(gt_confidence, angle, mode='nearest', padding_mode='zeros')
+
+    return images, gt_confidence
+
+
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--config', default='configs/nuscenes_train.txt', type=str, help='Run config txt file')
     parser.add_argument('--restart', action='store_true', help='Restart from checkpoint')
     parser.add_argument('--local', action='store_true', help='Local mode (disable distributed)')
     parser.add_argument('--model-name', default='justdepth', type=str, help='Name of timm model')
+    parser.add_argument('--dataset', default='nuscenes', choices=['nuscenes', 'zju'], help='Training dataset')
+    parser.add_argument('--dataset-path', default='./data/nuscenes_radar_5sweeps_infos_train.pkl', type=str)
+    parser.add_argument('--data-root', default='.data/nuscenes/samples', type=str)
+    parser.add_argument('--zju-path', default='data/zju/train.txt', type=str)
+    parser.add_argument('--zju-root', default='data/zju', type=str)
+    parser.add_argument('--confidence-path', default=None, type=str, help='Precomputed confidence map directory')
     args = parser.parse_args()
+    run_cfg = load_run_config(args.config)
+
+    args.model_name = cfg_get_with_cli_priority(run_cfg, 'model_name', args.model_name, '--model-name')
+    args.dataset = cfg_get_with_cli_priority(run_cfg, 'dataset', args.dataset, '--dataset')
+    args.dataset_path = cfg_get_with_cli_priority(run_cfg, 'dataset_path', args.dataset_path, '--dataset-path')
+    args.data_root = cfg_get_with_cli_priority(run_cfg, 'data_root', args.data_root, '--data-root')
+    args.zju_path = cfg_get_with_cli_priority(run_cfg, 'zju_path', args.dataset_path, '--zju-path')
+    args.zju_root = cfg_get_with_cli_priority(run_cfg, 'zju_root', args.data_root, '--zju-root')
+    if args.dataset == 'zju':
+        if any(arg == '--zju-path' or arg.startswith('--zju-path=') for arg in sys.argv[1:]):
+            args.dataset_path = args.zju_path
+        if any(arg == '--zju-root' or arg.startswith('--zju-root=') for arg in sys.argv[1:]):
+            args.data_root = args.zju_root
+    args.confidence_path = cfg_get_with_cli_priority(
+        run_cfg, 'confidence_path', args.confidence_path, '--confidence-path'
+    )
+
+    config.base_lr = cfg_get_float(run_cfg, 'base_lr', config.base_lr)
+    config.epoch_num = cfg_get_int(run_cfg, 'epoch_num', config.epoch_num)
+    config.warmup_epochs = cfg_get_int(run_cfg, 'warmup_epochs', config.warmup_epochs)
+    config.checkpoint_interval = cfg_get_int(run_cfg, 'checkpoint_interval', config.checkpoint_interval)
+    config.log_interval = cfg_get_int(run_cfg, 'log_interval', config.log_interval)
+    config.params.update({
+        'batch_size': cfg_get_int(run_cfg, 'batch_size', config.params['batch_size']),
+        'num_workers': cfg_get_int(run_cfg, 'num_workers', config.params['num_workers']),
+        'persistent_workers': cfg_get_bool(run_cfg, 'persistent_workers', config.params['persistent_workers']),
+        'prefetch_factor': cfg_get_int(run_cfg, 'prefetch_factor', config.params['prefetch_factor']),
+        'pin_memory': cfg_get_bool(run_cfg, 'pin_memory', config.params['pin_memory']),
+    })
 
     # log 파일 설정
     if LOCAL_RANK == 0:
@@ -233,6 +328,9 @@ def main():
         torch.cuda.set_device(LOCAL_RANK)
         dist.init_process_group(backend='nccl')
     device_id = LOCAL_RANK if not args.local else 0
+    device = torch.device(f"cuda:{device_id}")
+    imagenet_mean = IMAGENET_MEAN_TENSOR.to(device)
+    imagenet_std = IMAGENET_STD_TENSOR.to(device)
 
     # -----------------------------
     # timm 모델 생성
@@ -261,12 +359,29 @@ def main():
     # -----------------------------
     # 데이터셋 및 DataLoader
     # -----------------------------
-    depth_dataset = dataset.RCDepthDataset(
-        link_lidar=True,
-        rid_outliers=True,
-        augmentation=True,
-        rotation=True,
-    )
+    if args.dataset == 'zju':
+        depth_dataset = dataset.ZJUDataset(
+            path=args.dataset_path,
+            data_root=args.data_root,
+            rid_outliers=cfg_get_bool(run_cfg, 'rid_outliers', False),
+            augmentation=cfg_get_bool(run_cfg, 'augmentation', True),
+            rotation=cfg_get_bool(run_cfg, 'rotation', False),
+            gpu_augmentation=cfg_get_bool(run_cfg, 'gpu_augmentation', True),
+            confidence_path=args.confidence_path,
+            confidence_rule=cfg_get(run_cfg, 'confidence_rule', 'dot'),
+            sort_by_timestamp=cfg_get_bool(run_cfg, 'sort_by_timestamp', True),
+        )
+    else:
+        depth_dataset = dataset.NuScenesDataset(
+            path=args.dataset_path,
+            data_root=args.data_root,
+            link_lidar=cfg_get_bool(run_cfg, 'link_lidar', True),
+            rid_outliers=cfg_get_bool(run_cfg, 'rid_outliers', True),
+            augmentation=cfg_get_bool(run_cfg, 'augmentation', True),
+            rotation=cfg_get_bool(run_cfg, 'rotation', True),
+            gpu_augmentation=cfg_get_bool(run_cfg, 'gpu_augmentation', True),
+            confidence_path=args.confidence_path,
+        )
     train_sampler = DistributedSampler(depth_dataset, num_replicas=WORLD_SIZE, rank=RANK, shuffle=True)
     train_loader = DataLoader(depth_dataset, **sess.config.params, sampler=train_sampler, drop_last=True)
     
@@ -354,11 +469,20 @@ def main():
         rmse_sum = 0.0
         
         for idx, batch_data in enumerate(train_loader):
-            images, radar, lidar, gt_confidence = batch_data
-            images = images.to(device_id, non_blocking=True)
+            aug_params = None
+            if len(batch_data) == 5:
+                images, radar, lidar, gt_confidence, aug_params = batch_data
+                images = images.to(device_id, non_blocking=True).float().div_(255.0)
+                gt_confidence = gt_confidence.to(device_id, non_blocking=True).float()
+                aug_params = aug_params.to(device_id, non_blocking=True)
+                images, gt_confidence = apply_gpu_augmentation(images, gt_confidence, aug_params)
+                images = images.sub_(imagenet_mean).div_(imagenet_std)
+            else:
+                images, radar, lidar, gt_confidence = batch_data
+                images = images.to(device_id, non_blocking=True)
+                gt_confidence = gt_confidence.to(device_id, non_blocking=True)
             radar  = radar.to(device_id,  non_blocking=True)
             lidar  = lidar.to(device_id,  non_blocking=True)
-            gt_confidence = gt_confidence.to(device_id, non_blocking=True)
             
             
             logits, confidence_map, a, x = sess.net(images, radar)
@@ -520,4 +644,3 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         logger.info("KeyboardInterrupt, exit.")
         os._exit(0)
-
