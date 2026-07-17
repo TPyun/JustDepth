@@ -90,28 +90,10 @@ pip install -r requirements.txt
 
 ---
 
-## Training
-
-### Multi-GPU training (torchrun)
-~~~bash
-CUDA_VISIBLE_DEVICES=<GPU_IDS> torchrun --nproc_per_node=<NUM_GPUS> train.py --config configs/nuscenes_train.txt
-# Example:
-# CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 train.py --config configs/zju_train.txt
-~~~
-
-### Single-GPU training
-~~~bash
-CUDA_VISIBLE_DEVICES=<GPU_ID> python train.py --config configs/nuscenes_train.txt --local
-# Example:
-# CUDA_VISIBLE_DEVICES=0 python train.py --config configs/zju_train.txt --local
-~~~
-
----
-
 ## Confidence Maps
 
 Training uses binary confidence maps for the confidence decoder target. You can
-precompute them to avoid generating maps inside the dataloader.
+precompute them before training to avoid generating maps inside the dataloader.
 
 ### nuScenes
 ~~~bash
@@ -132,6 +114,24 @@ python save_confidence_map.py \
   --rule dot \
   --output-dir confidence_map/zju_train \
   --workers 8
+~~~
+
+---
+
+## Training
+
+### Multi-GPU training (torchrun)
+~~~bash
+CUDA_VISIBLE_DEVICES=<GPU_IDS> torchrun --nproc_per_node=<NUM_GPUS> train.py --config configs/nuscenes_train.txt
+# Example:
+# CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 train.py --config configs/zju_train.txt
+~~~
+
+### Single-GPU training
+~~~bash
+CUDA_VISIBLE_DEVICES=<GPU_ID> python train.py --config configs/nuscenes_train.txt --local
+# Example:
+# CUDA_VISIBLE_DEVICES=0 python train.py --config configs/zju_train.txt --local
 ~~~
 
 ---
