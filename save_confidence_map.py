@@ -59,7 +59,7 @@ def parse_args():
         type=str,
         default='dot',
         choices=['column', 'dot'],
-        help='ZJU only: column=column-wise radar map, dot=radar point-wise matching',
+        help='Confidence rule. Use column for nuScenes; ZJU supports column or dot.',
     )
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument(

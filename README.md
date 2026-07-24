@@ -101,9 +101,15 @@ python save_confidence_map.py \
   --dataset nuscenes \
   --nuscenes-path data/nuscenes_radar_5sweeps_infos_train.pkl \
   --nuscenes-root data/nuscenes/samples \
+  --rule column \
+  --rid-outliers \
+  --link-lidar \
   --output-dir confidence_map/nuscenes_train \
   --workers 8
 ~~~
+
+For nuScenes, use the column confidence rule with LiDAR linking and outlier
+removal enabled.
 
 ### ZJU-4DRadarCam
 ~~~bash
