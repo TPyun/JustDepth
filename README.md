@@ -38,6 +38,8 @@ To reduce stripe artifacts caused by **LiDAR Distribution Leakage**, JustDepth u
 
 ## Highlights
 
+<div align="center">
+  
 <table>
   <tr>
     <td><b>⚡ Single Stage</b></td>
@@ -80,6 +82,8 @@ To reduce stripe artifacts caused by **LiDAR Distribution Leakage**, JustDepth u
     <td>Gradient-based evaluation of LiDAR Distribution Leakage artifacts</td>
   </tr>
 </table>
+
+</div>
 
 ---
 
@@ -182,8 +186,6 @@ JustDepth produces complete dense depth maps across diverse daytime and nighttim
 
 The 8-layer GNN configuration processes one frame in approximately **14.8 ms** on an NVIDIA RTX 4070 Ti.
 
-In the paper's nuScenes comparison, JustDepth maintains competitive depth accuracy while reducing inference time by **39.7×** relative to GET-UP.
-
 ---
 
 ## Benchmark
@@ -194,8 +196,9 @@ In the paper's nuScenes comparison, JustDepth maintains competitive depth accura
 
 </div>
 
-The reported results use images with a resolution of **900 × 1600** and a maximum evaluation depth of **80 m**.
 
+<div align="center">
+  
 | Property | JustDepth |
 |:---|:---|
 | Input | RGB image and automotive radar |
@@ -210,10 +213,14 @@ The reported results use images with a resolution of **900 × 1600** and a maxim
 | Radar sweeps | 1 |
 | Image frames | 1 |
 
+</div>
+
 ---
 
 ## Supported Datasets
 
+<div align="center">
+  
 <table>
   <tr>
     <td><b>nuScenes</b></td>
@@ -225,21 +232,16 @@ The reported results use images with a resolution of **900 × 1600** and a maxim
   </tr>
 </table>
 
+</div>
+
 ---
 
 ## Downloads
 
 <div align="center">
 
-<a href="https://drive.google.com/drive/folders/1WvbM3ydickJU4d3_7ahFWVZ8HLsYjZzo?usp=share_link">
-  <img src="https://img.shields.io/badge/DOWNLOAD%20DATASET%20INDEX%20FILES-4285F4?style=for-the-badge&logo=googledrive&logoColor=white" alt="Download Dataset Index Files">
-</a>
-
-&nbsp;&nbsp;
-
-<a href="https://drive.google.com/drive/folders/176G2QK_zVTm5zYy4P9ZASQ2K0a4a23ny?usp=share_link">
-  <img src="https://img.shields.io/badge/DOWNLOAD%20PRETRAINED%20CHECKPOINTS-34A853?style=for-the-badge&logo=googledrive&logoColor=white" alt="Download Pretrained Checkpoints">
-</a>
+[![Dataset](https://img.shields.io/badge/Dataset-Index%20Files-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/drive/folders/1WvbM3ydickJU4d3_7ahFWVZ8HLsYjZzo?usp=share_link)
+[![Checkpoint](https://img.shields.io/badge/Checkpoint-Pretrained%20Weights-34A853?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/drive/folders/176G2QK_zVTm5zYy4P9ZASQ2K0a4a23ny?usp=share_link)
 
 </div>
 
