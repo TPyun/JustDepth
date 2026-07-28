@@ -4,39 +4,19 @@
 
 ### Real-Time Radar-Camera Depth Estimation With Single-Scan LiDAR Supervision
 
-<p>
-  <a href="https://ieeexplore.ieee.org/document/11358657">
-    <img src="https://img.shields.io/badge/IEEE%20RA--L%20%E2%80%A2%20VOL.%2011%20NO.%203-00629B?style=for-the-badge&logo=ieee&logoColor=white" alt="IEEE RA-L">
-  </a>
-  &nbsp;&nbsp;
-  <a href="https://arxiv.org/abs/2607.22172">
-    <img src="https://img.shields.io/badge/arXiv%20%E2%80%A2%202607.22172-B31B1B?style=for-the-badge&logo=arxiv&logoColor=white" alt="arXiv">
-  </a>
-  &nbsp;&nbsp;
-  <a href="https://youtu.be/EURdRO6OfS0">
-    <img src="https://img.shields.io/badge/DEMO%20%E2%80%A2%20YOUTUBE-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Demo Video">
-  </a>
-  &nbsp;&nbsp;
-  <a href="https://doi.org/10.1109/LRA.2026.3655274">
-    <img src="https://img.shields.io/badge/DOI%20%E2%80%A2%2010.1109%2FLRA.2026.3655274-008CC1?style=for-the-badge&logo=doi&logoColor=white" alt="DOI">
-  </a>
+<p align="center">
+
+
+[![IEEE RA-L](https://img.shields.io/badge/IEEE%20RA--L-VOL.%2011%20NO.%203-00629B?style=for-the-badge&logo=ieee&logoColor=white)](https://ieeexplore.ieee.org/document/11358657)
+[![arXiv](https://img.shields.io/badge/arXiv-2607.22172-B31B1B?style=for-the-badge&logo=arxiv&logoColor=white)](https://arxiv.org/abs/2607.22172)
+[![Demo](https://img.shields.io/badge/Demo-YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/EURdRO6OfS0)
+[![DOI](https://img.shields.io/badge/DOI-10.1109%2FLRA.2026.3655274-008CC1?style=for-the-badge&logo=doi&logoColor=white)](https://doi.org/10.1109/LRA.2026.3655274)
+
 </p>
 
 **A single-stage radar-camera depth estimator for real-time autonomous systems**
 
 **Constant Latency · Single-Scan LiDAR Supervision · No Auxiliary Annotations**
-
-<br>
-
-[**Paper**](https://ieeexplore.ieee.org/document/11358657)
-&nbsp;·&nbsp;
-[**arXiv**](https://arxiv.org/abs/2607.22172)
-&nbsp;·&nbsp;
-[**Demo**](https://youtu.be/EURdRO6OfS0)
-&nbsp;·&nbsp;
-[**Checkpoints**](https://drive.google.com/drive/folders/176G2QK_zVTm5zYy4P9ZASQ2K0a4a23ny?usp=share_link)
-&nbsp;·&nbsp;
-[**Dataset Index Files**](https://drive.google.com/drive/folders/1WvbM3ydickJU4d3_7ahFWVZ8HLsYjZzo?usp=share_link)
 
 </div>
 
