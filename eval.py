@@ -92,6 +92,35 @@ def save_input_depth_pair(image, depth, save_path, min_depth, max_depth):
     pair = np.concatenate([image_vis, depth_vis], axis=1)
     cv2.imwrite(str(save_path), cv2.cvtColor(pair, cv2.COLOR_RGB2BGR))
 
+
+def compute_vhgr(image: np.ndarray, eps: float = 1e-6) -> float:
+    if image.ndim == 3:
+        img = image.mean(axis=-1)
+    else:
+        img = image.copy()
+
+    dy = img[1:, :] - img[:-1, :]
+    dx = img[:, 1:] - img[:, :-1]
+
+    v = np.mean(np.abs(dy))
+    h = np.mean(np.abs(dx))
+
+    return float((v - h) / (v + h + eps))
+
+
+def get_vhgr_band(image: np.ndarray, dataset_name: str) -> np.ndarray:
+    dataset_name = str(dataset_name).lower()
+    if dataset_name == 'zju':
+        top, bottom = 144, 544
+    else:
+        top, bottom = 196, 696
+
+    height = image.shape[0]
+    top = max(0, min(top, height - 1))
+    bottom = max(top + 1, min(bottom, height))
+    return image[top:bottom]
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', default='configs/nuscenes_eval.txt', type=str, help='Run config txt file')
@@ -172,7 +201,9 @@ def main():
     
     mae_sum_total = 0.0
     rmse_sum_total = 0.0
+    vhgr_sum_total = 0.0
     count_total    = 0
+    vhgr_count_total = 0
     total_forward_time = 0.0
     sample_counter = 0
 
@@ -225,6 +256,11 @@ def main():
                         ds_conf.min_depth,
                         ds_conf.max_depth,
                     )
+                vhgr_band = get_vhgr_band(pred_b, args.dataset)
+                vhgr = compute_vhgr(np.clip(vhgr_band, 0, 50))
+                vhgr_sum_total += vhgr
+                vhgr_count_total += 1
+
                 valid_mask = (lidar_b > 0)
                 if valid_mask.sum() > 0:
                     mae_val = np.abs(pred_b - lidar_b)[valid_mask].mean()
@@ -250,22 +286,36 @@ def main():
             else:
                 avg_mae, avg_rmse = 0.0, 0.0
 
+            if vhgr_count_total > 0:
+                avg_vhgr = vhgr_sum_total / vhgr_count_total
+            else:
+                avg_vhgr = 0.0
+
             # Update tqdm progress bar with current averages
             progress_bar.set_postfix({
                 'MAE': f"{avg_mae:.4f}",
                 'RMSE': f"{avg_rmse:.4f}",
+                'VHGR': f"{avg_vhgr:.4f}",
             })
             
 
     if count_total > 0:
         mae_total = mae_sum_total / count_total
         rmse_total = rmse_sum_total / count_total
+        vhgr_total = vhgr_sum_total / vhgr_count_total if vhgr_count_total > 0 else 0.0
 
 
-        logger.info(f"[All Range] count={count_total}, MAE={mae_total:.4f}, RMSE={rmse_total:.4f}")
-        print(f"[All Range] count={count_total}, MAE={mae_total:.4f}, RMSE={rmse_total:.4f}")
+        logger.info(f"[All Range] count={count_total}, MAE={mae_total:.4f}, RMSE={rmse_total:.4f}, VHGR={vhgr_total:.4f}")
+        print(f"[All Range] count={count_total}, MAE={mae_total:.4f}, RMSE={rmse_total:.4f}, VHGR={vhgr_total:.4f}")
     else:
         logger.info("[All Range] No valid pixels found!")
+
+    if vhgr_count_total > 0:
+        vhgr_total = vhgr_sum_total / vhgr_count_total
+        logger.info(f"[VHGR] count={vhgr_count_total}, score={vhgr_total:.4f}")
+        print(f"[VHGR] count={vhgr_count_total}, score={vhgr_total:.4f}")
+    else:
+        logger.info("[VHGR] No valid samples found!")
 
     for r in ranges:
         c = metrics_dict[r]['count']

@@ -1,16 +1,12 @@
 import numpy as np
-
 from nuscenes.utils.data_classes import LidarPointCloud
 from pyquaternion import Quaternion
 
 
 def project_3d_to_2d(points: np.ndarray, projection_matrix: np.ndarray):
-    """From vod.frame without rounding to int"""
-
     uvw = projection_matrix.dot(points.T)
     uvw /= uvw[2]
     uvs = uvw[:2].T
-    # uvs = np.round(uvs).astype(np.int)
 
     return uvs
 
@@ -23,26 +19,17 @@ def map_pointcloud1_to_pointcloud2(
     cam_ego_pose,
     min_dist: float = 0.0,
 ):
-    # Points live in the point sensor frame. So they need to be
-    # transformed via global to the image plane.
-    # First step: transform the pointcloud to the ego vehicle
-    # frame for the timestamp of the sweep.
-    
     lidar_points = LidarPointCloud(lidar_points.T)
     lidar_points.rotate(
         Quaternion(lidar_calibrated_sensor['rotation']).rotation_matrix)
     lidar_points.translate(np.array(lidar_calibrated_sensor['translation']))
 
-    # Second step: transform from ego to the global frame.
     lidar_points.rotate(Quaternion(lidar_ego_pose['rotation']).rotation_matrix)
     lidar_points.translate(np.array(lidar_ego_pose['translation']))
 
-    # Third step: transform from global into the ego vehicle
-    # frame for the timestamp of the image.
     lidar_points.translate(-np.array(cam_ego_pose['translation']))
     lidar_points.rotate(Quaternion(cam_ego_pose['rotation']).rotation_matrix.T)
 
-    # Fourth step: transform from ego into the camera.
     lidar_points.translate(-np.array(cam_calibrated_sensor['translation']))
     lidar_points.rotate(
         Quaternion(cam_calibrated_sensor['rotation']).rotation_matrix.T)
